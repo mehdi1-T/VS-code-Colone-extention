@@ -19,6 +19,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from Lazy programmer!');
 	});
 
+	
 	context.subscriptions.push(disposable);
 }
 
