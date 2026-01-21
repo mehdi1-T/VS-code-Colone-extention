@@ -1,10 +1,6 @@
 # Lazy C - Advanced C Coding Assistant
 
-> **Supercharge your C programming** with intelligent automation, real-time safety analysis, and instant compilation in VSCode.
-
-[![VSCode](https://img.shields.io/badge/VSCode-1.80+-blue.svg)](https://code.visualstudio.com/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-## 🎯 What It Does
+## How Lazy C make your code easier with out using AI
 
 Eliminates C programming tedium with:
 - ✅ **Auto semicolons** - Smart insertion (skips control structures & comments)
@@ -15,11 +11,6 @@ Eliminates C programming tedium with:
 - ✅ **One-click compile** - Ctrl+Shift+B to compile, Ctrl+Shift+R to run
 - ✅ **Code templates** - Ctrl+Shift+M for main(), Ctrl+Shift+D for docs
 
-## 🚀 Quick Start
-
-1. Install from [VSCode Marketplace](https://marketplace.visualstudio.com)
-2. Create a `.c` file → auto-template loads
-3. Start typing → features work automatically
 
 ## ⌨️ Keyboard Shortcuts
 
@@ -69,32 +60,7 @@ fopen("file", "r");   // ℹ️ Check if NULL
 - **50+ Library Functions** detected automatically
 - **4 Real-time Safety Checks** running
 - **Zero Configuration** required
-- **100% Free & Open Source** (MIT License)
 
-## 💻 Requirements
-
-- VSCode 1.80 or higher
-- GCC or Clang compiler
-
-## 🔧 Building from Source
-
-```bash
-git clone https://github.com/mehdi1-T/Lazy-C-vscode-extension.git
-cd lazy-C
-npm install
-npm run compile
-# Press F5 to test in Extension Development Host
-```
-
-## 🤝 Contributing
-
-- **Report bugs**: [GitHub Issues](https://github.com/mehdi1-T/Lazy-C-vscode-extension/issues)
-- **Suggest features**: Open a GitHub issue
-- **Submit PRs**: Fork → Branch → Commit → Push → PR
-
-## 📜 License
-
-MIT - See [LICENSE](LICENSE) file. Free to use commercially and modify.
 
 ## 👨‍💻 Author
 
@@ -104,6 +70,5 @@ MIT - See [LICENSE](LICENSE) file. Free to use commercially and modify.
 
 <div align="center">
 
-⭐ **If you find Lazy C useful, star us on GitHub!**
-
+⭐ **If you like Lazy C, star me on GitHub!**
 </div>
