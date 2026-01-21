@@ -1,5 +1,6 @@
 # Lazy C
 
+
 > **Supercharge your C programming workflow** with intelligent automation, real-time safety analysis, and instant compilation—all directly in VSCode.
 
 [![VSCode Version](https://img.shields.io/badge/VSCode-1.80+-blue.svg)](https://code.visualstudio.com/)
