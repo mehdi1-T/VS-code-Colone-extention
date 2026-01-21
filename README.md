@@ -1,8 +1,10 @@
 # Lazy C - Advanced C Coding Assistant
 
-## How Lazy C make your code easier with out using AI
+![image](icon.png)
+## What lazy c can do
 
-Eliminates C programming tedium with:
+
+- ✅ **Browse all standard C library functions in one place**
 - ✅ **Auto semicolons** - Smart insertion (skips control structures & comments)
 - ✅ **Auto headers** - Includes required files automatically (50+ functions)
 - ✅ **Auto prototypes** - Function declarations generated automatically
