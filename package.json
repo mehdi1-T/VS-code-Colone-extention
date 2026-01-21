@@ -38,14 +38,14 @@
         {
           "id": "lazy-c",
           "title": "Lazy C",
-          "icon": "icon.png"
+          "icon": "assets/logo.png"
         }
       ]
     },
     "views": {
       "lazy-c": [
         {
-          "icon": "icon.png",
+          "icon": "assets/icon.svg",
           "id": "c-helper.libraryReference",
           "name": "C Manual Pages",
           "type": "webview"
