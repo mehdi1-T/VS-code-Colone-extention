@@ -7,7 +7,7 @@
 
 ## What lazy c can do?
 
-## ⌨️ Keyboard Shortcuts
+## Features
 - ✅ **Browse all standard C library functions in one place**
 - ✅ **Auto semicolons** - Smart insertion (skips control structures & comments)
 - ✅ **Auto headers** - Includes required files automatically (50+ functions)
@@ -19,7 +19,7 @@
 
 ---
 
-## ⌨️ Keyboard Shortcuts
+## Keyboard Shortcuts
 
 | Shortcut | Action |
 |----------|--------|
@@ -31,13 +31,13 @@
 ---
 
 
-🔗 **Check the extension repository** for full documentation, updates, and issues.
+**Check the extension repository** for full documentation, updates, and issues.
 
 ## License
 
 MIT License © 2026 Mehdi Talalha
 
-## 👨‍💻 Contact
+## Contact
 
 **Mehdi Talalha** - For quetions and feedback, please contact [GitHub](https://github.com/mehdi1-T/Lazy-C-vscode-extension).
 
