@@ -1,7 +1,7 @@
 /**
- * C Helper Extension for VSCode
+ * Lazy C Extension for VSCode
  * Provides intelligent auto-completion, safety warnings, and compilation features for C programming
- * @author Your Name
+ * @author Mehdi Talalha
  * @version 1.0.0
  */
 
@@ -67,9 +67,13 @@ const UNSAFE_FUNCTIONS: { [key: string]: string } = {
 let diagnosticCollection: vscode.DiagnosticCollection;
 let isProcessingChange = false;
 let prototypeCheckTimer: NodeJS.Timeout | undefined;
+let lastCursorLine: number = -1;
 
 // Global variable for reference panel
 let referencePanel: vscode.WebviewPanel | undefined;
+
+// Global variable for C Compiler terminal
+let cCompilerTerminal: vscode.Terminal | undefined;
 
 /**
  * Maps C standard library functions to their documentation
@@ -1137,6 +1141,7 @@ export function activate(context: vscode.ExtensionContext) {
     registerDocumentOpenHandler(context);
     registerDocumentChangeHandler(context);
     registerDocumentSaveHandler(context);
+    registerCursorPositionHandler(context);
     
     // Register commands
     registerCommands(context);
@@ -1236,6 +1241,34 @@ function registerDocumentOpenHandler(context: vscode.ExtensionContext) {
                         console.error('Error in autoAddRequiredHeaders on file open:', error);
                     });
                 }, 100);
+            }
+        })
+    );
+}
+
+function registerCursorPositionHandler(context: vscode.ExtensionContext) {
+    context.subscriptions.push(
+        vscode.window.onDidChangeTextEditorSelection(event => {
+            const editor = event.textEditor;
+            if (editor.document.languageId !== 'c' || isProcessingChange) {
+                return;
+            }
+            
+            try {
+                const currentLine = event.selections[0].active.line;
+                
+                // Check if cursor moved to a different line (works with arrow keys, enter, or mouse click)
+                if (lastCursorLine >= 0 && currentLine !== lastCursorLine) {
+                    // Add semicolon to the previous line if needed
+                    if (lastCursorLine >= 0 && lastCursorLine < editor.document.lineCount) {
+                        console.log(`Cursor moved from line ${lastCursorLine + 1} to line ${currentLine + 1}`);
+                        addSemicolonIfNeeded(editor.document, lastCursorLine);
+                    }
+                }
+                
+                lastCursorLine = currentLine;
+            } catch (error) {
+                console.error('Error in cursor position handler:', error);
             }
         })
     );
@@ -1369,8 +1402,12 @@ async function addSemicolonIfNeeded(document: vscode.TextDocument, lineNum: numb
         const line = document.lineAt(lineNum);
         const text = line.text.trimEnd();
         
+        // Check if this line should have a semicolon added
         if (shouldAddSemicolon(text)) {
             isProcessingChange = true;
+            
+            // Debug logging
+            console.log(`Adding semicolon to line ${lineNum + 1}: "${text}"`);
             
             await editor.edit(editBuilder => {
                 editBuilder.insert(line.range.end, ';');
@@ -1470,50 +1507,49 @@ function shouldAddSemicolon(text: string): boolean {
             return false;
         }
         
-        // Lines ending with special characters that don't need semicolons
-        if (/[{},:\\]$/.test(trimmed)) {
+        // Don't add to lines ending with opening brace or colon
+        if (/[{:\[]$/.test(trimmed)) {
             return false;
         }
         
-        // Preprocessor directives and comments
-        if (/^#|^\/\/|^\/\*|\*\/$/.test(trimmed)) {
+        // Don't add to lines that are just closing braces
+        if (/^[}]$/.test(trimmed)) {
             return false;
         }
         
-        // Control structures without body on same line
-        if (/^\s*(if|else\s+if|else|while|for|do|switch)\b/.test(trimmed)) {
-            return false;
-        }
-        if (/^\s*(case|default)\b/.test(trimmed)) {
+        // Preprocessor directives
+        if (/^#/.test(trimmed)) {
             return false;
         }
         
-        // Function definitions (return type + name + params without opening brace)
-        if (/^\s*(int|void|char|float|double|long|short|unsigned|signed)\s+\w+\s*\([^)]*\)\s*$/.test(trimmed)) {
+        // Comments
+        if (/^\/\/|^\/\*|\*\/$|^\*/.test(trimmed)) {
             return false;
         }
         
-        // Type definitions
+        // Don't add to control structure lines that end with ) and nothing else
+        if (/^\s*(if|else if|else|while|for|do|switch)\s*\(.*\)\s*$/.test(trimmed)) {
+            return false;
+        }
+        
+        // Don't add to function definitions (no body on same line)
+        if (/^\s*(int|void|char|float|double|long|short|unsigned|signed|static|const|auto|register)\s+[\w\s\*]+\([^)]*\)\s*$/.test(trimmed)) {
+            return false;
+        }
+        
+        // Don't add to struct/union/enum/typedef definitions
         if (/^\s*(struct|union|enum|typedef)\b/.test(trimmed)) {
             return false;
         }
         
-        // Standalone braces
-        if (/^\s*[{}]\s*$/.test(trimmed)) {
+        // Don't add to labels (case/default)
+        if (/^\s*(case\s+.+|default)\s*:\s*$/.test(trimmed)) {
             return false;
         }
         
-        // Check for patterns that DO need semicolons
-        const needsSemicolonPatterns = [
-            /^\s*(int|char|float|double|void|long|short|unsigned|signed|const|static|extern|auto|register)\s+\w+/,
-            /\w+\s*=\s*[^=]/,
-            /^\s*(return|break|continue|goto)\b/,
-            /\w+\s*\([^)]*\)(?!\s*\{)/,
-            /\w+\s*\[[^\]]*\]\s*=/,
-            /\*\w+\s*=/,
-        ];
-        
-        return needsSemicolonPatterns.some(pattern => pattern.test(trimmed));
+        // ADD SEMICOLON TO ANYTHING ELSE THAT LOOKS LIKE A STATEMENT
+        // This is more aggressive - if it's not explicitly excluded, add semicolon
+        return true;
     } catch (error) {
         console.error('Error in shouldAddSemicolon:', error);
         return false;
@@ -1772,8 +1808,11 @@ function executeCompile(editor: vscode.TextEditor) {
             return;
         }
 
-        const terminal = vscode.window.createTerminal('C Compiler');
-        terminal.show();
+        // Reuse existing terminal if available, otherwise create a new one
+        if (!cCompilerTerminal || cCompilerTerminal.exitStatus !== undefined) {
+            cCompilerTerminal = vscode.window.createTerminal('C Compiler');
+        }
+        cCompilerTerminal.show();
         
         // Platform-specific compilation command
         const isWindows = process.platform === 'win32';
@@ -1785,7 +1824,7 @@ function executeCompile(editor: vscode.TextEditor) {
             compileCmd = `clang "${filePath}" -o "${outputPath}" 2>/dev/null || gcc "${filePath}" -o "${outputPath}"`;
         }
         
-        terminal.sendText(compileCmd);
+        cCompilerTerminal.sendText(compileCmd);
         vscode.window.showInformationMessage(`Compiling ${fileName}.c → ${fileName}.exe`);
     } catch (error) {
         vscode.window.showErrorMessage(`Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -1828,8 +1867,11 @@ function executeCompileAndRun(editor: vscode.TextEditor) {
             return;
         }
 
-        const terminal = vscode.window.createTerminal('C Compiler & Runner');
-        terminal.show();
+        // Reuse existing terminal if available, otherwise create a new one
+        if (!cCompilerTerminal || cCompilerTerminal.exitStatus !== undefined) {
+            cCompilerTerminal = vscode.window.createTerminal('C Compiler');
+        }
+        cCompilerTerminal.show();
         
         // Platform-specific compilation and run command
         const isWindows = process.platform === 'win32';
@@ -1843,7 +1885,7 @@ function executeCompileAndRun(editor: vscode.TextEditor) {
             compileRunCmd = `(clang "${filePath}" -o "${outputPath}" 2>/dev/null || gcc "${filePath}" -o "${outputPath}") && "${outputPath}"`;
         }
         
-        terminal.sendText(compileRunCmd);
+        cCompilerTerminal.sendText(compileRunCmd);
     } catch (error) {
         vscode.window.showErrorMessage(`Compilation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
